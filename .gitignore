@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# Large Language Model files (adjust as needed)
+*.bin
+*.gguf
+*.pt
+model/
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite3
+
+# Environment variables
+.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Project-specific (adjust as needed)
+data/
+output/
+results/

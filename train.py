@@ -1,10 +1,10 @@
-# %%
+
 # !pip install transformers[sentencepiece] datasets sacrebleu rouge_score py7zr -q
 
-# %%
+
 # !nvidia-smi
 
-# %%
+
 from transformers import pipeline, set_seed
 
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ import torch
 
 nltk.download("punkt")
 
-# %%
+
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 # device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -34,7 +34,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
 
 model_pegasus = AutoModelForSeq2SeqLM.from_pretrained(model_ckpt).to(device)
 
-# %%
+
 def generate_batch_sized_chunks(list_of_elements, batch_size):
     """split the dataset into smaller batches that we can process simultaneously
     Yield successive batch-sized chunks from list_of_elements."""
@@ -42,7 +42,7 @@ def generate_batch_sized_chunks(list_of_elements, batch_size):
         yield list_of_elements[i : i + batch_size]
 
 
-# %%
+
 def calculate_metric_on_test_ds(dataset, metric, model, tokenizer, 
                                batch_size=2, device=device, 
                                column_text="article", 
@@ -76,15 +76,14 @@ def calculate_metric_on_test_ds(dataset, metric, model, tokenizer,
     score = metric.compute()
     return score
 
-# %% [markdown]
 # ### Load data
 # 
 # Link: https://huggingface.co/datasets/samsum
 
-# %%
 
 
-# %%
+
+
 import pandas as pd
 import os
 from datasets import load_dataset
@@ -120,7 +119,7 @@ data_files = {"train": train_file, "test": val_file}
 ds = load_dataset("csv", data_files=data_files)
 
 
-# %%
+
 # dataset_samsum = load_dataset("samsum")
 
 # split_lengths = [len(dataset_samsum[split])for split in dataset_samsum]
@@ -135,47 +134,46 @@ ds = load_dataset("csv", data_files=data_files)
 
 # print(dataset_samsum["test"][1]["summary"])
 
-# %% [markdown]
+
 # # Evaluating PEGASUS on CNN daily news
 
-# %%
+
 ds['test'][0]['article']
 
-# %%
+
 pipe = pipeline('summarization', model = model_ckpt )
 
 pipe_out = pipe(ds['test'][0]['article'] )
 
 print(pipe_out)
 
-# %%
 
 
-# %%
+
+
 print(pipe_out[0]['summary_text'].replace(" .<n>", ".\n"))
 
-# %%
+
 # rouge_metric = load_metric('rouge')
 
 # score = calculate_metric_on_test_ds(dataset_samsum['test'], rouge_metric, model_pegasus, tokenizer, column_text = 'dialogue', column_summary='summary', batch_size=8)
 
-# %%
+
 # rouge_names = ["rouge1", "rouge2", "rougeL", "rougeLsum"]
 # rouge_dict = dict((rn, score[rn].mid.fmeasure ) for rn in rouge_names )
 
 # pd.DataFrame(rouge_dict, index = ['pegasus'])
 
-# %% [markdown]
-# # Histogram
 
-# %%
+
+
 # ds['train'].features.keys = ['Unnamed: 0', 'dialogue', 'summary']
 # ds['test'].features.keys = ['Unnamed: 0', 'dialogue', 'summary']
 
-# %%
+
 ds['train'].features.keys()
 
-# %%
+
 dialogue_token_len = len([tokenizer.encode(s) for s in ds['train']['article']])
 
 summary_token_len = len([tokenizer.encode(s) for s in ds['test']['highlights']])
@@ -193,7 +191,7 @@ axes[1].set_xlabel("Length")
 plt.tight_layout()
 plt.show()
 
-# %%
+
 def convert_examples_to_features(example_batch):
     input_encodings = tokenizer(example_batch['article'] , max_length = 1024, truncation = True )
     
@@ -209,19 +207,19 @@ def convert_examples_to_features(example_batch):
 train_ds = ds['train'].map(convert_examples_to_features, batched = True)
 test_ds = ds['test'].map(convert_examples_to_features, batched = True)
 
-# %%
+
 from transformers import DataCollatorForSeq2Seq
 
 seq2seq_data_collator = DataCollatorForSeq2Seq(tokenizer, model=model_pegasus)
 
-# %%
+
 # from google.colab import drive
 # drive.mount('/content/drive')
 
-# %%
+
 # %cd /content/drive/MyDrive/005_BOKTIAR_AHMED_BAPPY/My_classes/FSDS_NOV_10_AM
 
-# %%
+
 from transformers import TrainingArguments, Trainer
 
 model_dir  = "/home/gary/1.code/6.NLP_GPT2/model_save/pegasus_cnn"
@@ -274,21 +272,21 @@ trainer_args = TrainingArguments(
 # torchdynamo, ray_scope, ddp_timeout, torch_compile, \
 # torch_compile_backend, torch_compile_mode
 
-# %%
+
 
 trainer = Trainer(model=model_pegasus, args=trainer_args,
                   tokenizer=tokenizer, data_collator=seq2seq_data_collator,
                   train_dataset=train_ds, 
                   eval_dataset=test_ds)
 
-# %%
-test_ds
 
-# %%
+# test_ds
+
+
 trainer.train()
 
 
-# %%
+
 # from datasets import load_dataset
 # def tokenize(batch):
 #     tokenized_input = tokenizer(batch[text_column], padding=True, truncation=True, max_length=153)
@@ -335,7 +333,6 @@ trainer.train()
 
 # trainer.train()
 
-# %%
 score = calculate_metric_on_test_ds(
     dataset_samsum['test'], rouge_metric, trainer.model, tokenizer, batch_size = 2, column_text = 'dialogue', column_summary= 'summary'
 )
@@ -344,40 +341,38 @@ rouge_dict = dict((rn, score[rn].mid.fmeasure ) for rn in rouge_names )
 
 pd.DataFrame(rouge_dict, index = [f'pegasus'] )
 
-# %%
+
 ## Save model
 model_dir  = "/home/gary/1.code/6.NLP_GPT2/model_save/pegasus_cnn"
 model_name = "pegasus-cnn-model"
 model_pegasus.save_pretrained(os.path.join(model_dir, model_name))
 
-# %%
+
 ## Save tokenizer
 tokenizer_name = "pegasus-cnn-model_tokenizer"
 tokenizer.save_pretrained(os.path.join(model_dir, tokenizer_name))
 
-# %% [markdown]
-# # Test
 
-# %%
-test_ds
 
-# %%
+
+
+
+
 tokenizer = AutoTokenizer.from_pretrained(os.path.join(model_dir, tokenizer_name))
 
-# %%
+
 sample_text = test_ds[0]["article"]
 
 reference = test_ds[0]["highlights"]
 
-# %%
-reference
 
-# %%
+
+
 gen_kwargs = {"length_penalty": 0.8, "num_beams":8, "max_length": 128}
 
 pipe = pipeline("summarization", model=os.path.join(model_dir, model_name),tokenizer=tokenizer)
 
-# %%
+
 print("Dialogue:")
 print(sample_text)
 
@@ -389,7 +384,7 @@ print(reference)
 print("\nModel Summary:")
 print(pipe(sample_text, **gen_kwargs)[0]["summary_text"])
 
-# %%
+
 sample_text = "The specific activity of enzymes can be altered over long timescales in cells by synonymous mutations that alter a messenger RNA molecule’s sequence but not the encoded protein’s primary structure. How this happens at the molecular level is unknown. Here, we use multiscale modelling of three Escherichia coli enzymes (type III chloramphenicol acetyltransferase, D-alanine–D-alanine ligase B and dihydrofolate reductase) to understand experimentally measured changes in specific activity due to synonymous mutations. The modelling involves coarse-grained simulations of protein synthesis and post-translational behaviour, all-atom simulations to test robustness and quantum mechanics/molecular mechanics calculations to characterize enzymatic function. We show that changes in codon translation rates induced by synonymous mutations cause shifts in co-translational and post-translational folding pathways that kinetically partition molecules into subpopulations that very slowly interconvert to the native, functional state. Structurally, these states resemble the native state, with localized misfolding near the active sites of the enzymes. These long-lived states exhibit reduced catalytic activity, as shown by their increased activation energies for the reactions they catalyse."
 print("Dialogue:")
 print(sample_text)
@@ -402,7 +397,7 @@ print("\nReference Summary:")
 print("\nModel Summary:")
 print(pipe(sample_text, **gen_kwargs)[0]["summary_text"])
 
-# %%
+
 sample_text =  '''
        Scientists say they have discovered a new species of orangutans on Indonesia’s island of Sumatra.
 The population differs in several ways from the two existing orangutan species found in Sumatra and the neighboring island of Borneo.
@@ -436,13 +431,10 @@ print("\nReference Summary:")
 print("\nModel Summary:")
 print(pipe(sample_text, **gen_kwargs)[0]["summary_text"])
 
-# %%
 
 
-# %%
 
 
-# %%
 
 
 
