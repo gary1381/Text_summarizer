@@ -1,1 +1,1 @@
-# Text_summarizer
+# A Text summarizer using Google Pegasus model 
