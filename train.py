@@ -1,10 +1,4 @@
 
-# !pip install transformers[sentencepiece] datasets sacrebleu rouge_score py7zr -q
-
-
-# !nvidia-smi
-
-
 from transformers import pipeline, set_seed
 
 import matplotlib.pyplot as plt
@@ -77,11 +71,6 @@ def calculate_metric_on_test_ds(dataset, metric, model, tokenizer,
     return score
 
 # ### Load data
-# 
-# Link: https://huggingface.co/datasets/samsum
-
-
-
 
 
 import pandas as pd
@@ -109,36 +98,14 @@ train_file = "cnn_daily_news_1k_train.csv"
 train_file = os.path.join(data_dir, train_file)
 val_file = "cnn_daily_news_1k_val.csv"
 val_file = os.path.join(data_dir, val_file)
-# df2.iloc[:train_size].to_csv(os.path.join(data_dir, train_file))
-# df2.iloc[train_size:].to_csv(os.path.join(data_dir, val_file))
 
-# train_dataset = load_dataset("csv", data_files=train_file)
-# val_dataset = load_dataset("csv", data_files=val_file)
 
 data_files = {"train": train_file, "test": val_file}
 ds = load_dataset("csv", data_files=data_files)
 
 
 
-# dataset_samsum = load_dataset("samsum")
-
-# split_lengths = [len(dataset_samsum[split])for split in dataset_samsum]
-
-# print(f"Split lengths: {split_lengths}")
-# print(f"Features: {dataset_samsum['train'].column_names}")
-# print("\nDialogue:")
-
-# print(dataset_samsum["test"][1]["dialogue"])
-
-# print("\nSummary:")
-
-# print(dataset_samsum["test"][1]["summary"])
-
-
-# # Evaluating PEGASUS on CNN daily news
-
-
-ds['test'][0]['article']
+print(ds['test'][0]['article'])
 
 
 pipe = pipeline('summarization', model = model_ckpt )
@@ -164,14 +131,11 @@ print(pipe_out[0]['summary_text'].replace(" .<n>", ".\n"))
 
 # pd.DataFrame(rouge_dict, index = ['pegasus'])
 
-
-
-
 # ds['train'].features.keys = ['Unnamed: 0', 'dialogue', 'summary']
 # ds['test'].features.keys = ['Unnamed: 0', 'dialogue', 'summary']
 
 
-ds['train'].features.keys()
+print(ds['train'].features.keys())
 
 
 dialogue_token_len = len([tokenizer.encode(s) for s in ds['train']['article']])
@@ -213,18 +177,11 @@ from transformers import DataCollatorForSeq2Seq
 seq2seq_data_collator = DataCollatorForSeq2Seq(tokenizer, model=model_pegasus)
 
 
-# from google.colab import drive
-# drive.mount('/content/drive')
-
-
-# %cd /content/drive/MyDrive/005_BOKTIAR_AHMED_BAPPY/My_classes/FSDS_NOV_10_AM
-
 
 from transformers import TrainingArguments, Trainer
 
 model_dir  = "/home/gary/1.code/6.NLP_GPT2/model_save/pegasus_cnn"
 
-# output_dir = os.path.join(data_dir, "")
 
 trainer_args = TrainingArguments(
     output_dir=model_dir, num_train_epochs=1, warmup_steps=500,
@@ -235,42 +192,6 @@ trainer_args = TrainingArguments(
     
     no_cuda=True,
 ) 
-# fp16=True,
-
-# optional parameters:
-# output_dir, overwrite_output_dir, do_train, \
-# do_eval, do_predict, evaluation_strategy, prediction_loss_only,\
-# per_device_train_batch_size, per_device_eval_batch_size, \
-# per_gpu_train_batch_size, per_gpu_eval_batch_size, \
-# gradient_accumulation_steps, eval_accumulation_steps, \
-# eval_delay, learning_rate, weight_decay, adam_beta1, \
-# adam_beta2, adam_epsilon, max_grad_norm, num_train_epochs, \
-# max_steps, lr_scheduler_type, warmup_ratio, warmup_steps, \
-# log_level, log_level_replica, log_on_each_node, logging_dir, \
-# logging_strategy, logging_first_step, logging_steps,\
-# logging_nan_inf_filter, save_strategy, save_steps, \
-# save_total_limit, save_safetensors, save_on_each_node, \
-# no_cuda, use_mps_device, seed, data_seed, jit_mode_eval, \
-# use_ipex, bf16, fp16, fp16_opt_level, half_precision_backend,\
-# bf16_full_eval, fp16_full_eval, tf32, local_rank, xpu_backend,\
-# tpu_num_cores, tpu_metrics_debug, debug, dataloader_drop_last,\
-# eval_steps, dataloader_num_workers, past_index, run_name, \
-# disable_tqdm, remove_unused_columns, label_names, \
-# load_best_model_at_end, metric_for_best_model, \
-# greater_is_better, ignore_data_skip, sharded_ddp,\
-# fsdp, fsdp_min_num_params, fsdp_config, \
-# fsdp_transformer_layer_cls_to_wrap, deepspeed, \
-# label_smoothing_factor, optim, optim_args,\
-# adafactor, group_by_length, length_column_name, \
-# report_to, ddp_find_unused_parameters, ddp_bucket_cap_mb, \
-# dataloader_pin_memory, skip_memory_metrics, use_legacy_prediction_loop,\
-# push_to_hub, resume_from_checkpoint, hub_model_id, \
-# hub_strategy, hub_token, hub_private_repo, gradient_checkpointing, \
-# include_inputs_for_metrics, fp16_backend, push_to_hub_model_id, \
-# push_to_hub_organization, push_to_hub_token, \
-# mp_parameters, auto_find_batch_size, full_determinism,\
-# torchdynamo, ray_scope, ddp_timeout, torch_compile, \
-# torch_compile_backend, torch_compile_mode
 
 
 
@@ -287,51 +208,6 @@ trainer.train()
 
 
 
-# from datasets import load_dataset
-# def tokenize(batch):
-#     tokenized_input = tokenizer(batch[text_column], padding=True, truncation=True, max_length=153)
-#     tokenized_label = tokenizer(batch[generated_column], padding=True, truncation=True, max_length=274)
-
-#     tokenized_input['labels'] = tokenized_label['input_ids']
-
-#     return tokenized_input
-
-# dataset = load_dataset('csv', data_files=dataset_file, split='train')
-# dataset = dataset.train_test_split(test_size=0.05, seed=SEED)
-# train_dataset = dataset['train']
-# val_dataset = dataset['test']
-
-# train_dataset = train_dataset.map(tokenize, batched=True, batch_size=len(train_dataset))
-# val_dataset = val_dataset.map(tokenize, batched=True, batch_size=len(val_dataset))
-# train_dataset.set_format('numpy', columns=['input_ids', 'attention_mask', 'labels'])
-# val_dataset.set_format('numpy', columns=['input_ids', 'attention_mask', 'labels'])
-# # And then I use Trainer to train my T5 model like this:
-
-# training_args = TrainingArguments(
-# output_dir=output_dir,
-# num_train_epochs=1,
-# per_device_train_batch_size=8,
-# per_device_eval_batch_size=8,
-# eval_accumulation_steps=1,
-# learning_rate=0.001,
-# evaluation_strategy='steps',
-# save_steps=1000000,
-# save_total_limit=1,
-# remove_unused_columns=True,
-# run_name=now,
-# logging_steps=100,
-# eval_steps=100,
-# logging_first_step=True
-# )
-
-# trainer = Trainer(
-# model=model,
-# args=training_args,
-# train_dataset=train_dataset,
-# eval_dataset=val_dataset
-# )
-
-# trainer.train()
 
 score = calculate_metric_on_test_ds(
     dataset_samsum['test'], rouge_metric, trainer.model, tokenizer, batch_size = 2, column_text = 'dialogue', column_summary= 'summary'
